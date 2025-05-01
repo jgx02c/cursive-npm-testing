@@ -1,0 +1,49 @@
+{
+  "name": "react-cursive-handwrite",
+  "version": "0.1.3",
+  "description": "React component to animate cursive handwriting text",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc && tsc -p tsconfig.esm.json && node build.js",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jgx02c/react-cursive-handwrite.git"
+  },
+  "keywords": [
+    "handwriting",
+    "react",
+    "animation",
+    "cursive"
+  ],
+  "author": "joshua goodman",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jgx02c/react-cursive-handwrite/issues"
+  },
+  "homepage": "https://github.com/jgx02c/react-cursive-handwrite#readme",
+  "dependencies": {
+    "framer-motion": "^12.6.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
+    "typescript": "^5.8.2"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
+  }
+}
