@@ -8,37 +8,71 @@ const App: React.FC = () => {
       padding: '20px',
       maxWidth: '800px',
       margin: '0 auto',
-      fontFamily: 'Arial, sans-serif'
+      fontFamily: 'Arial, sans-serif',
+      backgroundColor: '#f5f5f5',
+      minHeight: '100vh'
     }}>
-      <h1 style={{ textAlign: 'center', marginBottom: '30px' }}>Cursive Handwriting Demo</h1>
+      <h1 style={{ textAlign: 'center', marginBottom: '30px', color: '#333' }}>
+        Cursive Handwriting Demo
+      </h1>
       
-      <div style={{ marginBottom: '40px' }}>
-        <h2>Single Word Test</h2>
+      <div style={{ 
+        marginBottom: '40px', 
+        border: '1px solid #ddd',
+        borderRadius: '8px',
+        padding: '15px',
+        backgroundColor: '#fff'
+      }}>
         <HandwritingText 
-          text="Hello" 
+          text="a" 
           strokeColor="#FF0000" 
-          strokeWidth={3} 
+          strokeWidth={4} 
           duration={3} 
         />
       </div>
 
-      <div style={{ marginBottom: '40px' }}>
-        <h2>Multiple Words Test</h2>
+      <div style={{ 
+        marginBottom: '40px', 
+        border: '1px solid #ddd',
+        borderRadius: '8px',
+        padding: '15px',
+        backgroundColor: '#fff'
+      }}>
         <HandwritingText 
-          text="Cursive Writing" 
+          text="b" 
           strokeColor="#0000FF" 
-          strokeWidth={2} 
-          duration={4} 
+          strokeWidth={4} 
+          duration={3} 
         />
       </div>
 
-      <div style={{ marginBottom: '40px' }}>
-        <h2>Alphabet Test</h2>
+      <div style={{ 
+        marginBottom: '40px', 
+        border: '1px solid #ddd',
+        borderRadius: '8px',
+        padding: '15px',
+        backgroundColor: '#fff'
+      }}>
         <HandwritingText 
-          text="abcdefghijklmnopqrstuvwxyz" 
+          text="ab" 
           strokeColor="#00AA00" 
-          strokeWidth={2} 
-          duration={6} 
+          strokeWidth={4} 
+          duration={5} 
+        />
+      </div>
+
+      <div style={{ 
+        marginBottom: '40px', 
+        border: '1px solid #ddd',
+        borderRadius: '8px',
+        padding: '15px',
+        backgroundColor: '#fff'
+      }}>
+        <HandwritingText 
+          text="c" 
+          strokeColor="#FF00FF" 
+          strokeWidth={3} 
+          duration={2} 
         />
       </div>
     </div>

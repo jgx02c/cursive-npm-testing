@@ -1,0 +1,47 @@
+.hidden-path {
+  stroke-opacity: 0;
+  fill-opacity: 0;
+}
+
+.animated-path {
+  stroke-opacity: 1;
+  fill-opacity: 0;
+  animation: draw linear forwards;
+}
+
+@keyframes draw {
+  0% {
+    stroke-dashoffset: var(--length, 1000);
+    fill-opacity: 0;
+  }
+  90% {
+    stroke-dashoffset: 0;
+    fill-opacity: 0;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    fill-opacity: 1;
+  }
+}
+
+.handwriting-path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  fill-opacity: 0;
+  animation: handwrite linear forwards;
+}
+
+@keyframes handwrite {
+  0% {
+    stroke-dashoffset: 1000;
+    fill-opacity: 0;
+  }
+  95% {
+    stroke-dashoffset: 0;
+    fill-opacity: 0;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    fill-opacity: 1;
+  }
+} 

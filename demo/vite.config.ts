@@ -6,7 +6,10 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      'react-cursive-handwrite': '../src'
+      '@': '/src'
     }
+  },
+  server: {
+    port: 5174
   }
 })
