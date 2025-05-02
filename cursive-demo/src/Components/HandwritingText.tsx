@@ -168,7 +168,9 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
     width: dimensions.width || 'auto',
     height: dimensions.height || 'auto',
     minWidth: '100px',
-    minHeight: '50px'
+    minHeight: '50px',
+    opacity: isLoading ? 0 : 1, // Hide while loading
+    transition: 'opacity 0.3s ease-in' // Smooth fade in when ready
   };
 
   const svgStyle = {
@@ -181,7 +183,7 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <Component style={containerStyle} />; // Empty container while loading
   }
 
   return (
