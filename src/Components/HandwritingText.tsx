@@ -18,6 +18,8 @@ interface HandwritingTextProps {
   fontPath?: string;
   /** Whether to show debug logging */
   debug?: boolean;
+  /** Callback function to be called when animation completes */
+  onAnimationComplete?: () => void;
 }
 
 export const HandwritingText: React.FC<HandwritingTextProps> = ({
@@ -28,6 +30,7 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
   as: Component = "div",
   fontPath = "google",
   debug = false,
+  onAnimationComplete,
 }) => {
   const log = (...args: any[]) => {
     if (debug) {
@@ -43,6 +46,10 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
   const [currentLetter, setCurrentLetter] = React.useState<QueuedLetter | null>(null);
   const queueManagerRef = useRef<QueueManager | null>(null);
   const currentPathRef = useRef<SVGPathElement>(null);
+  const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [isFontLoaded, setIsFontLoaded] = useState(false);
+  const svgRef = useRef<SVGSVGElement>(null);
 
   // Initialize font
   useEffect(() => {
@@ -64,6 +71,7 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
         log(`Loaded ${Object.keys(paths).length} letter paths`);
         setLetterPaths(paths);
         queueManagerRef.current = new QueueManager(paths);
+        setIsFontLoaded(true);
         setIsLoading(false);
       } catch (error) {
         log('Error loading font:', error);
@@ -187,6 +195,7 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
         </div>
       ) : (
         <svg
+          ref={svgRef}
           viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
@@ -234,3 +243,5 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
     </Component>
   );
 };
+
+export default HandwritingText;
