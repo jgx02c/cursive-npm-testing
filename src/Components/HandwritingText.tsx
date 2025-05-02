@@ -1,5 +1,6 @@
 // src/components/HandwritingText.tsx
 import React, { useEffect, ElementType, useRef, useState } from "react";
+import { motion, useAnimation } from "framer-motion";
 import { initializeFont, LetterPaths } from "./Loader";
 import { QueueManager, QueuedLetter } from "./QueueManager";
 
@@ -18,8 +19,6 @@ interface HandwritingTextProps {
   fontPath?: string;
   /** Whether to show debug logging */
   debug?: boolean;
-  /** Callback function to be called when animation completes */
-  onAnimationComplete?: () => void;
 }
 
 export const HandwritingText: React.FC<HandwritingTextProps> = ({
@@ -30,7 +29,6 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
   as: Component = "div",
   fontPath = "google",
   debug = false,
-  onAnimationComplete,
 }) => {
   const log = (...args: any[]) => {
     if (debug) {
@@ -38,6 +36,7 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
     }
   };
 
+  const controls = useAnimation();
   const [letterPaths, setLetterPaths] = React.useState<LetterPaths>({});
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -45,8 +44,6 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
   const [renderedLetters, setRenderedLetters] = useState<QueuedLetter[]>([]);
   const [currentLetter, setCurrentLetter] = React.useState<QueuedLetter | null>(null);
   const queueManagerRef = useRef<QueueManager | null>(null);
-  const currentPathRef = useRef<SVGPathElement>(null);
-  const svgRef = useRef<SVGSVGElement>(null);
 
   // Initialize font
   useEffect(() => {
@@ -56,16 +53,25 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
     
     const loadFont = async () => {
       try {
+        if (!fontPath) {
+          throw new Error('fontPath is required');
+        }
+
         log(`Loading font from path: ${fontPath}`);
         const paths = await initializeFont(fontPath);
         
         if (!mounted) return;
         
+        if (!paths || typeof paths !== 'object') {
+          throw new Error('Invalid font paths returned');
+        }
+
         if (Object.keys(paths).length === 0) {
-          throw new Error('No letter paths were loaded');
+          log('Warning: No letter paths were loaded');
+        } else {
+          log(`Loaded ${Object.keys(paths).length} letter paths`);
         }
         
-        log(`Loaded ${Object.keys(paths).length} letter paths`);
         setLetterPaths(paths);
         queueManagerRef.current = new QueueManager(paths);
         setIsLoading(false);
@@ -94,19 +100,27 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
       return;
     }
     
-    queueManagerRef.current.reset();
-    queueManagerRef.current.addText(text);
-    setRenderedLetters([]); // Clear previous letters
-    
-    // Add padding to dimensions
-    const padding = 20;
-    setDimensions({
-      width: queueManagerRef.current.getTotalLength() + (padding * 2),
-      height: queueManagerRef.current.getMaxHeight() + (padding * 2)
-    });
-    
-    // Start with first letter
-    setCurrentLetter(queueManagerRef.current.getNextLetter());
+    try {
+      queueManagerRef.current.reset();
+      queueManagerRef.current.addText(text);
+      setRenderedLetters([]); // Clear previous letters
+      
+      // Add padding to dimensions
+      const padding = 20;
+      setDimensions({
+        width: queueManagerRef.current.getTotalLength() + (padding * 2),
+        height: queueManagerRef.current.getMaxHeight() + (padding * 2)
+      });
+      
+      // Start with first letter
+      const nextLetter = queueManagerRef.current.getNextLetter();
+      if (nextLetter) {
+        setCurrentLetter(nextLetter);
+      }
+    } catch (error) {
+      log('Error processing text:', error);
+      setError(`Failed to process text: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }, [children, letterPaths, isLoading]);
 
   // Calculate baseline Y position - use 75% of max height as baseline
@@ -114,52 +128,55 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
 
   // Animate current letter
   useEffect(() => {
-    if (!currentLetter || !currentPathRef.current) return;
+    if (!currentLetter) return;
     
-    try {
-      const path = currentPathRef.current;
-      const pathLength = path.getTotalLength();
-      
-      if (isNaN(pathLength)) {
-        throw new Error('Invalid path length');
+    // Create a temporary SVG to measure the path length
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", currentLetter.path.path);
+    svg.appendChild(path);
+    document.body.appendChild(svg);
+    
+    const pathLength = path.getTotalLength();
+    document.body.removeChild(svg);
+    
+    log(`Animating letter "${currentLetter.letter}" with length ${pathLength}`);
+
+    const text = typeof children === 'string' ? children : '';
+    const letterDuration = (duration / text.length) * 1.25; // Slightly longer duration for overlap
+    
+    controls.set({ 
+      strokeDasharray: pathLength,
+      strokeDashoffset: pathLength,
+      opacity: 1 
+    });
+    
+    controls.start({
+      strokeDashoffset: 0,
+      opacity: 1,
+      transition: {
+        duration: letterDuration,
+        ease: [0.33, 1, 0.68, 1], // Custom easing for smoother animation
+      },
+    }).then(() => {
+      if (queueManagerRef.current) {
+        setRenderedLetters(prev => [...prev, currentLetter]);
+        queueManagerRef.current.markAsRendered(currentLetter.order);
       }
-      
-      log(`Animating letter "${currentLetter.letter}" with length ${pathLength}`);
+    });
 
-      const text = typeof children === 'string' ? children : '';
-      const letterDuration = (duration / text.length) * 1.25; // Slightly longer duration for overlap
-      
-      // Set initial state
-      path.style.strokeDasharray = `${pathLength}`;
-      path.style.strokeDashoffset = `${pathLength}`;
-      path.style.opacity = '1';
-      
-      // Animate using CSS
-      path.style.transition = `stroke-dashoffset ${letterDuration}s cubic-bezier(0.33, 1, 0.68, 1)`;
-      path.style.strokeDashoffset = '0';
-      
-      // Handle completion
-      const timer = setTimeout(() => {
-        if (queueManagerRef.current) {
-          setRenderedLetters(prev => [...prev, currentLetter]);
-          queueManagerRef.current.markAsRendered(currentLetter.order);
-          
-          // Start next letter
-          const nextLetter = queueManagerRef.current.getNextLetter();
-          if (nextLetter) {
-            setCurrentLetter(nextLetter);
-          } else {
-            onAnimationComplete?.();
-          }
+    // Start next letter when current letter is 60% complete for smoother overlap
+    const timer = setTimeout(() => {
+      if (queueManagerRef.current) {
+        const nextLetter = queueManagerRef.current.getNextLetter();
+        if (nextLetter) {
+          setCurrentLetter(nextLetter);
         }
-      }, letterDuration * 1000);
+      }
+    }, letterDuration * 1000 * 0.6); // Start next letter earlier
 
-      return () => clearTimeout(timer);
-    } catch (error) {
-      console.error('Error in letter animation:', error);
-      setError(`Error animating letter: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }, [currentLetter, duration, children, onAnimationComplete]);
+    return () => clearTimeout(timer);
+  }, [currentLetter, controls, duration, children]);
 
   const containerStyle = {
     position: 'relative' as const,
@@ -168,8 +185,8 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
     height: dimensions.height || 'auto',
     minWidth: '100px',
     minHeight: '50px',
-    opacity: isLoading ? 0 : 1,
-    transition: 'opacity 0.3s ease-in'
+    opacity: isLoading ? 0 : 1, // Hide while loading
+    transition: 'opacity 0.3s ease-in' // Smooth fade in when ready
   };
 
   const svgStyle = {
@@ -182,7 +199,7 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
   };
 
   if (isLoading) {
-    return <Component style={containerStyle} />;
+    return <Component style={containerStyle} />; // Empty container while loading
   }
 
   return (
@@ -193,7 +210,6 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
         </div>
       ) : (
         <svg
-          ref={svgRef}
           viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
@@ -210,36 +226,29 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
-              style={{
-                transform: `translate(${letter.path.xOffset}px, ${baselineY - letter.path.height}px)`
-              }}
+              transform={`translate(${letter.path.xOffset}, ${baselineY - letter.path.height})`}
             />
           ))}
           {/* Render current letter */}
           {currentLetter && (
-            <g
-              style={{
-                transform: `translate(${currentLetter.path.xOffset}px, ${baselineY - currentLetter.path.height}px)`
+            <motion.path
+              d={currentLetter.path.path}
+              stroke={strokeColor}
+              strokeWidth={strokeWidth}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              transform={`translate(${currentLetter.path.xOffset}, ${baselineY - currentLetter.path.height})`}
+              initial={{ 
+                strokeDasharray: 0,
+                strokeDashoffset: 0,
+                opacity: 0 
               }}
-            >
-              <path
-                ref={currentPathRef}
-                d={currentLetter.path.path}
-                stroke={strokeColor}
-                strokeWidth={strokeWidth}
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{
-                  opacity: 0
-                }}
-              />
-            </g>
+              animate={controls}
+            />
           )}
         </svg>
       )}
     </Component>
   );
 };
-
-export default HandwritingText;
