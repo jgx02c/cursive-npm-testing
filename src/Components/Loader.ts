@@ -57,30 +57,43 @@ export async function initializeFont(fontPath: string): Promise<LetterPaths> {
     // Create a promise for each letter
     const letterPromises = letters.split('').map(async (letter) => {
       try {
-        // Try to load the SVG file
-        const response = await fetch(`/${fontPath}/${letter}.svg`);
-        if (response.ok) {
-          const svgContent = await response.text();
-          paths[letter] = parseSVG(svgContent);
-          console.log(`✅ Successfully loaded SVG for letter "${letter}"`);
-          return true;
+        // Try to load the SVG file - handle both relative and absolute paths
+        const path = fontPath.startsWith('/') ? fontPath : `/${fontPath}`;
+        const response = await fetch(`${path}/${letter}.svg`);
+        if (!response.ok) {
+          throw new Error(`Failed to load SVG for letter "${letter}": ${response.status} ${response.statusText}`);
         }
-        return false;
+        
+        const svgContent = await response.text();
+        const parsedPath = parseSVG(svgContent);
+        
+        if (!parsedPath || !parsedPath.path) {
+          throw new Error(`Failed to parse SVG for letter "${letter}"`);
+        }
+        
+        paths[letter] = parsedPath;
+        console.log(`✅ Successfully loaded SVG for letter "${letter}"`);
+        return true;
       } catch (error) {
-        console.log(`❌ Error loading SVG for letter "${letter}":`, error);
+        console.error(`❌ Error loading SVG for letter "${letter}":`, error);
         return false;
       }
     });
     
     // Wait for all letters to be processed
-    await Promise.allSettled(letterPromises);
+    const results = await Promise.allSettled(letterPromises);
+    const successCount = results.filter(r => r.status === 'fulfilled' && r.value).length;
     
-    console.log(`Loaded ${Object.keys(paths).length} letter SVGs for font "${fontPath}"`);
+    if (successCount === 0) {
+      throw new Error('Failed to load any letter SVGs');
+    }
+    
+    console.log(`Loaded ${successCount} letter SVGs for font "${fontPath}"`);
     letterPaths[fontPath] = paths;
     return paths;
   } catch (error) {
     console.error('Error loading font:', error);
-    return {};
+    throw error; // Re-throw to let the component handle the error
   }
 }
 

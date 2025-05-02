@@ -59,11 +59,10 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
         if (!mounted) return;
         
         if (Object.keys(paths).length === 0) {
-          log('Warning: No letter paths were loaded');
-        } else {
-          log(`Loaded ${Object.keys(paths).length} letter paths`);
+          throw new Error('No letter paths were loaded');
         }
         
+        log(`Loaded ${Object.keys(paths).length} letter paths`);
         setLetterPaths(paths);
         queueManagerRef.current = new QueueManager(paths);
         setIsLoading(false);
