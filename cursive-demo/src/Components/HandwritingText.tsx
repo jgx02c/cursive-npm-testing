@@ -107,11 +107,14 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
     setCurrentLetter(queueManagerRef.current.getNextLetter());
   }, [children, letterPaths, isLoading]);
 
+  // Calculate baseline Y position - use 75% of max height as baseline
+  const baselineY = Math.floor(dimensions.height * 0.75);
+
   // Animate current letter
   useEffect(() => {
     if (!currentLetter) return;
     
-    // Create a temporary SVG to measure the actual path length
+    // Create a temporary SVG to measure the path length
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", currentLetter.path.path);
@@ -122,6 +125,9 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
     document.body.removeChild(svg);
     
     log(`Animating letter "${currentLetter.letter}" with length ${pathLength}`);
+
+    const text = typeof children === 'string' ? children : '';
+    const letterDuration = (duration / text.length) * 1.25; // Slightly longer duration for overlap
     
     controls.set({ 
       strokeDasharray: pathLength,
@@ -133,19 +139,27 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
       strokeDashoffset: 0,
       opacity: 1,
       transition: {
-        duration: duration / (typeof children === 'string' ? children.length : 1),
-        ease: [0.4, 0, 0.2, 1],
+        duration: letterDuration,
+        ease: [0.33, 1, 0.68, 1], // Custom easing for smoother animation
       },
     }).then(() => {
       if (queueManagerRef.current) {
-        // Add the completed letter to rendered letters
         setRenderedLetters(prev => [...prev, currentLetter]);
         queueManagerRef.current.markAsRendered(currentLetter.order);
-        setCurrentLetter(queueManagerRef.current.getNextLetter());
       }
-    }).catch(error => {
-      log('Animation error:', error);
     });
+
+    // Start next letter when current letter is 60% complete for smoother overlap
+    const timer = setTimeout(() => {
+      if (queueManagerRef.current) {
+        const nextLetter = queueManagerRef.current.getNextLetter();
+        if (nextLetter) {
+          setCurrentLetter(nextLetter);
+        }
+      }
+    }, letterDuration * 1000 * 0.6); // Start next letter earlier
+
+    return () => clearTimeout(timer);
   }, [currentLetter, controls, duration, children]);
 
   const containerStyle = {
@@ -165,9 +179,6 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
     height: '100%',
     overflow: 'visible' as const
   };
-
-  // Calculate baseline Y position - use 75% of max height as baseline
-  const baselineY = Math.floor(dimensions.height * 0.75);
 
   if (isLoading) {
     return <div>Loading...</div>;
