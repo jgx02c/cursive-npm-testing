@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "framer-motion": "^12.9.4",
     "react": "^19.0.0",
     "react-cursive-handwrite": "^0.2.3",
     "react-dom": "^19.0.0"
