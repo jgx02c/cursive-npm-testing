@@ -9,7 +9,7 @@ function App() {
         fontPath="fonts/google"
         strokeColor="#FF0000"
         strokeWidth={3}
-        duration={5}
+        duration={10}
         debug={true}
       >
         {'hello'}
