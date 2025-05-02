@@ -113,52 +113,69 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
   useEffect(() => {
     if (!currentLetter) return;
     
-    // Create a temporary SVG to measure the path length
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", currentLetter.path.path);
-    svg.appendChild(path);
-    document.body.appendChild(svg);
-    
-    const pathLength = path.getTotalLength();
-    document.body.removeChild(svg);
-    
-    log(`Animating letter "${currentLetter.letter}" with length ${pathLength}`);
-
-    const text = typeof children === 'string' ? children : '';
-    const letterDuration = (duration / text.length) * 1.25; // Slightly longer duration for overlap
-    
-    controls.set({ 
-      strokeDasharray: pathLength,
-      strokeDashoffset: pathLength,
-      opacity: 1 
-    });
-    
-    controls.start({
-      strokeDashoffset: 0,
-      opacity: 1,
-      transition: {
-        duration: letterDuration,
-        ease: [0.33, 1, 0.68, 1], // Custom easing for smoother animation
-      },
-    }).then(() => {
-      if (queueManagerRef.current) {
-        setRenderedLetters(prev => [...prev, currentLetter]);
-        queueManagerRef.current.markAsRendered(currentLetter.order);
+    try {
+      // Create a temporary SVG to measure the path length
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      
+      if (!currentLetter.path || !currentLetter.path.path) {
+        throw new Error('Invalid path data for current letter');
       }
-    });
+      
+      path.setAttribute("d", currentLetter.path.path);
+      svg.appendChild(path);
+      document.body.appendChild(svg);
+      
+      const pathLength = path.getTotalLength();
+      document.body.removeChild(svg);
+      
+      if (isNaN(pathLength)) {
+        throw new Error('Invalid path length');
+      }
+      
+      log(`Animating letter "${currentLetter.letter}" with length ${pathLength}`);
 
-    // Start next letter when current letter is 60% complete for smoother overlap
-    const timer = setTimeout(() => {
-      if (queueManagerRef.current) {
-        const nextLetter = queueManagerRef.current.getNextLetter();
-        if (nextLetter) {
-          setCurrentLetter(nextLetter);
+      const text = typeof children === 'string' ? children : '';
+      const letterDuration = (duration / text.length) * 1.25; // Slightly longer duration for overlap
+      
+      controls.set({ 
+        strokeDasharray: pathLength,
+        strokeDashoffset: pathLength,
+        opacity: 1 
+      });
+      
+      controls.start({
+        strokeDashoffset: 0,
+        opacity: 1,
+        transition: {
+          duration: letterDuration,
+          ease: [0.33, 1, 0.68, 1], // Custom easing for smoother animation
+        },
+      }).then(() => {
+        if (queueManagerRef.current) {
+          setRenderedLetters(prev => [...prev, currentLetter]);
+          queueManagerRef.current.markAsRendered(currentLetter.order);
         }
-      }
-    }, letterDuration * 1000 * 0.6); // Start next letter earlier
+      }).catch(error => {
+        console.error('Error during animation:', error);
+        setError(`Animation error: ${error.message}`);
+      });
 
-    return () => clearTimeout(timer);
+      // Start next letter when current letter is 60% complete for smoother overlap
+      const timer = setTimeout(() => {
+        if (queueManagerRef.current) {
+          const nextLetter = queueManagerRef.current.getNextLetter();
+          if (nextLetter) {
+            setCurrentLetter(nextLetter);
+          }
+        }
+      }, letterDuration * 1000 * 0.6); // Start next letter earlier
+
+      return () => clearTimeout(timer);
+    } catch (error) {
+      console.error('Error in letter animation:', error);
+      setError(`Error animating letter: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }, [currentLetter, controls, duration, children]);
 
   const containerStyle = {
