@@ -8,8 +8,21 @@ export interface PositionedPath {
 }
 
 export function createPositionedPath(letterPath: LetterPath, xOffset: number): PositionedPath {
-  // Just add a move command at the start to position the letter
-  const positionedPath = `M${xOffset} 0 ${letterPath.path}`;
+  // Create a temporary SVG to measure the path
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const pathElement = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  pathElement.setAttribute("d", letterPath.path);
+  svg.appendChild(pathElement);
+  document.body.appendChild(svg);
+
+  const bbox = pathElement.getBBox();
+  document.body.removeChild(svg);
+
+  // Calculate baseline offset based on the viewBox height
+  const baselineOffset = letterPath.height - bbox.height;
+  
+  // Position the path with the calculated baseline
+  const positionedPath = `M${xOffset},${baselineOffset} ${letterPath.path}`;
   
   return {
     path: positionedPath,

@@ -111,12 +111,27 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
   useEffect(() => {
     if (!currentLetter) return;
     
-    const pathLength = currentLetter.path.width;
-    log(`Animating letter "${currentLetter.letter}"`);
+    // Create a temporary SVG to measure the actual path length
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", currentLetter.path.path);
+    svg.appendChild(path);
+    document.body.appendChild(svg);
     
-    controls.set({ strokeDashoffset: pathLength });
+    const pathLength = path.getTotalLength();
+    document.body.removeChild(svg);
+    
+    log(`Animating letter "${currentLetter.letter}" with length ${pathLength}`);
+    
+    controls.set({ 
+      strokeDasharray: pathLength,
+      strokeDashoffset: pathLength,
+      opacity: 1 
+    });
+    
     controls.start({
       strokeDashoffset: 0,
+      opacity: 1,
       transition: {
         duration: duration / (typeof children === 'string' ? children.length : 1),
         ease: [0.4, 0, 0.2, 1],
@@ -151,6 +166,9 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
     overflow: 'visible' as const
   };
 
+  // Calculate baseline Y position - use 75% of max height as baseline
+  const baselineY = Math.floor(dimensions.height * 0.75);
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -179,7 +197,7 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
-              transform={`translate(${letter.path.xOffset}, 0)`}
+              transform={`translate(${letter.path.xOffset}, ${baselineY - letter.path.height})`}
             />
           ))}
           {/* Render current letter */}
@@ -189,11 +207,14 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
               stroke={strokeColor}
               strokeWidth={strokeWidth}
               fill="none"
-              strokeDasharray={currentLetter.path.width}
-              strokeDashoffset={currentLetter.path.width}
               strokeLinecap="round"
               strokeLinejoin="round"
-              transform={`translate(${currentLetter.path.xOffset}, 0)`}
+              transform={`translate(${currentLetter.path.xOffset}, ${baselineY - currentLetter.path.height})`}
+              initial={{ 
+                strokeDasharray: 0,
+                strokeDashoffset: 0,
+                opacity: 0 
+              }}
               animate={controls}
             />
           )}
