@@ -1,4 +1,4 @@
-import { HandwritingText } from 'react-cursive-handwrite';
+import { HandwritingText } from './Components/HandwritingText';
 import './App.css'
 
 function App() {
