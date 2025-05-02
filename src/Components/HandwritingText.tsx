@@ -46,9 +46,6 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
   const [currentLetter, setCurrentLetter] = React.useState<QueuedLetter | null>(null);
   const queueManagerRef = useRef<QueueManager | null>(null);
   const currentPathRef = useRef<SVGPathElement>(null);
-  const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [isFontLoaded, setIsFontLoaded] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
 
   // Initialize font
@@ -71,7 +68,6 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
         log(`Loaded ${Object.keys(paths).length} letter paths`);
         setLetterPaths(paths);
         queueManagerRef.current = new QueueManager(paths);
-        setIsFontLoaded(true);
         setIsLoading(false);
       } catch (error) {
         log('Error loading font:', error);
@@ -152,6 +148,8 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
           const nextLetter = queueManagerRef.current.getNextLetter();
           if (nextLetter) {
             setCurrentLetter(nextLetter);
+          } else {
+            onAnimationComplete?.();
           }
         }
       }, letterDuration * 1000);
@@ -161,7 +159,7 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
       console.error('Error in letter animation:', error);
       setError(`Error animating letter: ${error instanceof Error ? error.message : String(error)}`);
     }
-  }, [currentLetter, duration, children]);
+  }, [currentLetter, duration, children, onAnimationComplete]);
 
   const containerStyle = {
     position: 'relative' as const,
