@@ -13,7 +13,7 @@
     }
   },
   "scripts": {
-    "build": "rm -rf dist && tsc && tsc -p tsconfig.esm.json && node build.js",
+    "build": "rm -rf dist && vite build && node build.js",
     "prepublishOnly": "npm run build"
   },
   "repository": {
@@ -40,10 +40,16 @@
   "devDependencies": {
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
-    "typescript": "^5.8.2"
+    "@vitejs/plugin-react": "^4.2.1",
+    "typescript": "^5.8.2",
+    "vite": "^5.1.4"
   },
   "peerDependencies": {
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0"
-  }
+  },
+  "files": [
+    "dist",
+    "src/fonts/svg/*.svg"
+  ]
 }

@@ -16,7 +16,8 @@
     "noFallthroughCasesInSwitch": true,
     "declaration": true,
     "outDir": "dist/cjs",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
   "include": ["src"]
 } 

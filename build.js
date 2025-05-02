@@ -22,6 +22,12 @@ if (!fs.existsSync('dist/components')) {
 fs.cpSync('dist/cjs/components', 'dist/components', { recursive: true });
 fs.cpSync('dist/cjs/fonts', 'dist/fonts', { recursive: true });
 
+// Copy SVG files
+if (!fs.existsSync('dist/fonts/svg')) {
+  fs.mkdirSync('dist/fonts/svg', { recursive: true });
+}
+fs.cpSync('src/fonts/svg/*.svg', 'dist/fonts/svg', { recursive: true });
+
 // Create package.json for proper ESM exports
 const packageJson = {
   "type": "module",
