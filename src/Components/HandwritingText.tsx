@@ -138,6 +138,7 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
       const text = typeof children === 'string' ? children : '';
       const letterDuration = (duration / text.length) * 1.25; // Slightly longer duration for overlap
       
+      // Use a simpler animation approach without transforms
       controls.set({ 
         strokeDasharray: pathLength,
         strokeDashoffset: pathLength,
@@ -226,7 +227,9 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
-              transform={`translate(${letter.path.xOffset}, ${baselineY - letter.path.height})`}
+              style={{
+                transform: `translate(${letter.path.xOffset}px, ${baselineY - letter.path.height}px)`
+              }}
             />
           ))}
           {/* Render current letter */}
@@ -238,7 +241,9 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
-              transform={`translate(${currentLetter.path.xOffset}, ${baselineY - currentLetter.path.height})`}
+              style={{
+                transform: `translate(${currentLetter.path.xOffset}px, ${baselineY - currentLetter.path.height}px)`
+              }}
               initial={{ 
                 strokeDasharray: 0,
                 strokeDashoffset: 0,

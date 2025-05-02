@@ -9,7 +9,7 @@ export type LetterPath = {
 export type LetterPaths = Record<string, LetterPath>;
 
 // Parse SVG from the converter's format
-function parseSVG(svgString: string): LetterPath {
+const parseSVG = (svgString: string): LetterPath => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(svgString, 'image/svg+xml');
   const svg = doc.querySelector('svg');
@@ -36,13 +36,13 @@ function parseSVG(svgString: string): LetterPath {
     width,
     height
   };
-}
+};
 
 // Store paths for each letter
 const letterPaths: Record<string, LetterPaths> = {};
 
 // Initialize font with a specific path
-export async function initializeFont(fontPath: string): Promise<LetterPaths> {
+export const initializeFont = async (fontPath: string): Promise<LetterPaths> => {
   console.log(`Initializing font with path: ${fontPath}`);
   
   if (letterPaths[fontPath]) {
@@ -67,7 +67,7 @@ export async function initializeFont(fontPath: string): Promise<LetterPaths> {
         const svgContent = await response.text();
         const parsedPath = parseSVG(svgContent);
         
-        if (!parsedPath || !parsedPath.path) {
+        if (!parsedPath?.path) {
           throw new Error(`Failed to parse SVG for letter "${letter}"`);
         }
         
@@ -95,20 +95,20 @@ export async function initializeFont(fontPath: string): Promise<LetterPaths> {
     console.error('Error loading font:', error);
     throw error; // Re-throw to let the component handle the error
   }
-}
+};
 
 // Get the path for a letter
-export function getLetterPath(letter: string, fontPaths: LetterPaths): LetterPath | null {
+export const getLetterPath = (letter: string, fontPaths: LetterPaths): LetterPath | null => {
   const lowerLetter = letter.toLowerCase();
   if (fontPaths[lowerLetter]) {
     return fontPaths[lowerLetter];
   }
   console.log(`No SVG path found for letter: "${letter}"`);
   return null;
-}
+};
 
 // Generate a path for a word
-export function generateWordPath(word: string, fontPaths: LetterPaths): { path: string; fill: string } {
+export const generateWordPath = (word: string, fontPaths: LetterPaths): { path: string; fill: string } => {
   console.log(`Generating path for word: "${word}" with ${Object.keys(fontPaths).length} available letters`);
   
   let path = '';
@@ -206,4 +206,4 @@ export function generateWordPath(word: string, fontPaths: LetterPaths): { path: 
   console.log(`Generated path length: ${path.length} characters`);
   console.log(`Final path: ${path.substring(0, 100)}...`);
   return { path, fill: currentFill };
-} 
+}; 
