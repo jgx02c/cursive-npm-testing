@@ -1,4 +1,4 @@
-import { HandwritingText } from './Components/HandwritingText';
+import { HandwritingText } from 'react-cursive-handwrite';
 import './App.css'
 
 function App() {
@@ -7,10 +7,10 @@ function App() {
       <h1>React Cursive Handwriting Demo</h1>
       <HandwritingText 
         fontPath="fonts/google"
-        strokeColor="#FF0000"
-        strokeWidth={3}
-        duration={10}
-        debug={true}
+        strokeColor="#FFFFFF"
+        strokeWidth={2}
+        duration={8}
+      
       >
         {'hello'}
       </HandwritingText>
