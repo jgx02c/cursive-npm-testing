@@ -24,8 +24,15 @@ function parseSVG(svgString: string): LetterPath {
   const width = viewBox[2];
   const height = viewBox[3];
 
+  // Clean up the path data
+  let pathData = path.getAttribute('d') || '';
+  // Remove any extra spaces and ensure proper command separation
+  pathData = pathData.replace(/\s+/g, ' ').trim();
+  // Ensure proper spacing between commands
+  pathData = pathData.replace(/([MLHVCSQTAZmlhvcsqtaz])(?=[^0-9\s])/g, '$1 ');
+
   return {
-    path: path.getAttribute('d') || '',
+    path: pathData,
     width,
     height
   };
