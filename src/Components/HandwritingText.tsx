@@ -234,23 +234,26 @@ export const HandwritingText: React.FC<HandwritingTextProps> = ({
           ))}
           {/* Render current letter */}
           {currentLetter && (
-            <motion.path
-              d={currentLetter.path.path}
-              stroke={strokeColor}
-              strokeWidth={strokeWidth}
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+            <motion.g
               style={{
                 transform: `translate(${currentLetter.path.xOffset}px, ${baselineY - currentLetter.path.height}px)`
               }}
-              initial={{ 
-                strokeDasharray: 0,
-                strokeDashoffset: 0,
-                opacity: 0 
-              }}
-              animate={controls}
-            />
+            >
+              <motion.path
+                d={currentLetter.path.path}
+                stroke={strokeColor}
+                strokeWidth={strokeWidth}
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                initial={{ 
+                  strokeDasharray: 0,
+                  strokeDashoffset: 0,
+                  opacity: 0 
+                }}
+                animate={controls}
+              />
+            </motion.g>
           )}
         </svg>
       )}
