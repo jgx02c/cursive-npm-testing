@@ -12,7 +12,7 @@ function App() {
         duration={8}
       
       >
-        {'hello'}
+        {'Joshua Goodman'}
       </HandwritingText>
     </div>
   )
